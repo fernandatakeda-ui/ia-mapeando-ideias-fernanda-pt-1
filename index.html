@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Organizador de Estudos da Fernandones1234!</title>
+  <!-- Google Fonts: Estilo Minecraft Pixel Art -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+  <!-- Link para o CSS Externo -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Cabeçalho estilo Minecraft -->
+    <header class="mc-header">
+      <div class="player-profile">
+        <div class="steve-head"></div>
+        <div class="player-info">
+          <span class="player-title">ORGANIZADOR DE ESTUDOS</span>
+          <h1 class="player-name">Fernandones1234!</h1>
+        </div>
+      </div>
+
+      <!-- Barra de Experiência (XP) -->
+      <div class="xp-section">
+        <div class="xp-header-text">
+          <span>NÍVEL DE ORGANIZAÇÃO: <span id="level-display" class="highlight-gold">1</span></span>
+          <span>XP: <span id="xp-text">0 / 1000</span></span>
+        </div>
+        <div class="xp-bar-container">
+          <div id="xp-bar-fill" class="xp-bar-fill" style="width: 0%;"></div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Estatísticas rápidas do Inventário -->
+    <section class="stats-bar">
+      <div class="stat-slot">
+        <span class="stat-label">📜 MINAS ATIVAS:</span>
+        <span id="stat-active" class="stat-value active-color">8</span>
+      </div>
+      <div class="stat-slot">
+        <span class="stat-label">⚔️ QUESTS CONCLUÍDAS:</span>
+        <span id="stat-solved" class="stat-value solved-color">0</span>
+      </div>
+      <div class="stat-slot">
+        <button id="btn-add-quest" class="mc-button btn-green">+ NOVA QUEST DE ESTUDO</button>
+      </div>
+    </section>
+
+    <!-- Barra de Filtros / Abas do Livro -->
+    <nav class="filter-bar">
+      <button class="filter-btn active" data-filter="all">TODOS OS INCÔMODOS</button>
+      <button class="filter-btn" data-filter="alta">⚠️ GRAVIDADE ALTA</button>
+      <button class="filter-btn" data-filter="foco">🎯 FOCO & ROTINA</button>
+      <button class="filter-btn" data-filter="saude">🧪 SAÚDE MENTAL</button>
+      <button class="filter-btn" data-filter="solved">✅ CONCLUÍDOS</button>
+    </nav>
+
+    <!-- Grid de Cards com Problemas Reais de Estudo -->
+    <main id="cards-grid" class="cards-grid"></main>
+  </div>
+
+  <!-- MODAL ESTILO BAÚ DO MINECRAFT (CHEST GUI) -->
+  <div id="chest-modal" class="modal-overlay hidden">
+    <div class="chest-gui">
+      <div class="chest-header">
+        <span class="chest-title">📦 BAÚ DE RESOLUÇÃO DE QUEST</span>
+        <button id="close-modal" class="mc-close-btn">&times;</button>
+      </div>
+
+      <div class="chest-content">
+        <div class="problem-summary">
+          <h2 id="modal-title" class="mc-title">Nome do Incômodo</h2>
+          <div class="modal-tags">
+            <span id="modal-category" class="mc-badge">CATEGORIA</span>
+            <span id="modal-severity" class="mc-badge">GRAVIDADE</span>
+          </div>
+        </div>
+
+        <div class="chest-sections">
+          <!-- Bloco do Diagnóstico -->
+          <div class="gui-box">
+            <div class="box-label">🔍 SINTOMAS NO SEU DIA A DIA</div>
+            <p id="modal-description" class="gui-text">Descrição do incômodo real.</p>
+          </div>
+
+          <!-- Bloco do Impacto -->
+          <div class="gui-box border-redstone">
+            <div class="box-label color-redstone">💥 DEBUFF NA SUA ROTINA</div>
+            <p id="modal-impact" class="gui-text">Efeitos na vida real do aluno.</p>
+          </div>
+
+          <!-- Bloco da Receita de Crafting (Solução) -->
+          <div class="gui-box border-diamond">
+            <div class="box-label color-diamond">⚒️ CRAFTING DA SOLUÇÃO</div>
+            <p id="modal-solution" class="gui-text">Passo a passo prático para resolver este problema.</p>
+          </div>
+
+          <!-- Dica Potion -->
+          <div class="gui-box border-gold">
+            <div class="box-label color-gold">🧪 POÇÃO DE DICA RÁPIDA</div>
+            <p id="modal-tip" class="gui-text">Uma dica imediata para testar hoje.</p>
+          </div>
+        </div>
+
+        <div class="chest-footer">
+          <button id="btn-toggle-status" class="mc-button btn-gold">EQUIPAR SOLUÇÃO / CONCLUIR (+250 XP)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE CRIAR NOVO INCÔMODO -->
+  <div id="add-modal" class="modal-overlay hidden">
+    <div class="chest-gui add-gui">
+      <div class="chest-header">
+        <span class="chest-title">✍️ REGISTRAR NOVO INCÔMODO</span>
+        <button id="close-add-modal" class="mc-close-btn">&times;</button>
+      </div>
+
+      <form id="add-quest-form" class="chest-content">
+        <div class="form-group">
+          <label>NOME DO PROBLEMA / INCÔMODO:</label>
+          <input type="text" id="input-title" class="mc-input" placeholder="Ex: Procrastinação antes da prova" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>CATEGORIA:</label>
+            <select id="input-category" class="mc-select">
+              <option value="foco">🎯 Foco & Rotina</option>
+              <option value="saude">🧪 Saúde Mental</option>
+              <option value="metodo">📚 Método de Estudo</option>
+              <option value="ambiente">🏡 Ambiente</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>GRAVIDADE:</label>
+            <select id="input-severity" class="mc-select">
+              <option value="alta">⚠️ ALTA (Creeper)</option>
+              <option value="media">⚡ MÉDIA (Zombie)</option>
+              <option value="baixa">🌱 BAIXA (Slime)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>COMO ISSO PREJUDICA SEU DIA? (Sintomas):</label>
+          <textarea id="input-desc" class="mc-textarea" rows="2" placeholder="Descreva o incômodo no seu cotidiano..." required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>CRAFTING DA SOLUÇÃO (Plano de Ação):</label>
+          <textarea id="input-solution" class="mc-textarea" rows="2" placeholder="O que fazer para resolver?" required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>POÇÃO DE DICA RÁPIDA:</label>
+          <input type="text" id="input-tip" class="mc-input" placeholder="Dica rápida instantânea..." required>
+        </div>
+
+        <button type="submit" class="mc-button btn-green block-btn">CRIAR QUEST NO INVENTÁRIO</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Script de Interatividade e Áudio em Web Audio API -->
+  <script>
+    // --- GERENCIADOR DE ÁUDIO SINTETIZADO 8-BIT (MINECRAFT VIBES) ---
+    const AudioEngine = {
+      ctx: null,
+      init() {
+        if (!this.ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AudioCtx();
+        }
+      },
+      playClick() {
+        this.init();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(400, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(100, this.ctx.currentTime + 0.05);
+        gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.05);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.05);
+      },
+      playChestOpen() {
+        this.init();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+        osc.frequency.linearRampToValueAtTime(300, this.ctx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.15);
+      },
+      playXpSound() {
+        this.init();
+        const now = this.ctx.currentTime;
+        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+        notes.forEach((freq, idx) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now + idx * 0.06);
+          gain.gain.setValueAtTime(0.2, now + idx * 0.06);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.06 + 0.1);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now + idx * 0.06);
+          osc.stop(now + idx * 0.06 + 0.1);
+        });
+      }
+    };
+
+    // --- BASE DE DADOS DOS INCÔMODOS E PROBLEMAS REAIS DE ESTUDO ---
+    let studyQuests = [
+      {
+        id: "q1",
+        title: "Procrastinação com Redstone",
+        category: "foco",
+        categoryLabel: "🎯 Foco & Rotina",
+        severity: "alta",
+        severityLabel: "⚠️ ALTA (Creeper)",
+        description: "Você abre o notebook/caderno para estudar, mas acaba navegando sem parar no TikTok, YouTube, Instagram ou jogos por horas antes de começar.",
+        impact: "Desperdício de tempo precioso e sensação imediata de culpa ao ver a noite chegar sem ter rendido nada.",
+        solution: "Aplique a técnica Pomodoro + Bloqueador de Distrações (Modo Foco). Estude 25 min sem celular e pause 5 min. Deixe o celular em outro cômodo.",
+        tip: "Apenas diga a si mesmo: 'Vou estudar por 5 minutos só'. Quebrar a resistência inicial é 90% da vitória!",
+        solved: false,
+        icon: "💣"
+      },
+      {
+        id: "q2",
+        title: "Inventário Lotado de Matéria",
+        category: "metodo",
+        categoryLabel: "📚 Método de Estudo",
+        severity: "alta",
+        severityLabel: "⚠️ ALTA (Creeper)",
+        description: "Acúmulo gigante de matérias e conteúdos atrasados acumulados nas últimas semanas sem saber por onde recomeçar.",
+        impact: "Paralisia por excesso de escolhas e desespero pré-prova acumulado.",
+        solution: "Faça uma Limpeza de Inventário: Liste todas as matérias pendentes e divida em blocos pequenos de 30 minutos diários na ordem de urgência.",
+        tip: "Estude primeiro o que mais cai na prova (Princípio de Pareto 80/20). Não tente ler 500 páginas em um dia.",
+        solved: false,
+        icon: "📦"
+      },
+      {
+        id: "q3",
+        title: "Barra de Fome Zero (Burnout)",
+        category: "saude",
+        categoryLabel: "🧪 Saúde Mental",
+        severity: "alta",
+        severityLabel: "⚠️ ALTA (Creeper)",
+        description: "Exaustão mental e sono profundo durante os estudos devido à rotina desregulada, noites mal dormidas e alimentação inadequada.",
+        impact: "Capacidade de retenção e foco nulas, gerando a sensação de ler a mesma frase 10 vezes sem entender nada.",
+        solution: "Regule seu ciclo de sono (dormir 7h-8h) e faça pausas ativas a cada 1h de estudo para se hidratar e alongar.",
+        tip: "Estudar cansado é ilusão de produtividade. 1 hora descansado vale mais que 4 horas sem energia.",
+        solved: false,
+        icon: "🥩"
+      },
+      {
+        id: "q4",
+        title: "Efeito Creeper (Ansiedade Pré-Prova)",
+        category: "saude",
+        categoryLabel: "🧪 Saúde Mental",
+        severity: "media",
+        severityLabel: "⚡ MÉDIA (Zombie)",
+        description: "Sensação de 'branco' na hora dos testes, acompanhado de taquicardia e pensamentos de que 'não aprendeu nada'.",
+        impact: "Notas baixas mesmo tendo estudado muito, devido ao bloqueio emocional.",
+        solution: "Pratique Simulações Reais (flashcards e provas antigas com cronômetro). Acostume seu cérebro com o ambiente de avaliação.",
+        tip: "Na hora do travamento, faça a respiração diafragmática 4-7-8 (Inspire por 4s, segure por 7s, solte em 8s).",
+        solved: false,
+        icon: "💥"
+      },
+      {
+        id: "q5",
+        title: "Mapa sem Bússola (Falta de Horário)",
+        category: "foco",
+        categoryLabel: "🎯 Foco & Rotina",
+        severity: "media",
+        severityLabel: "⚡ MÉDIA (Zombie)",
+        description: "Não ter um cronograma de estudos fixo ou plano semanal estabelecido. Estudar 'o que der na telha'.",
+        impact: "Gasto diário de energia decidindo o que fazer, priorizando apenas matérias fáceis e esquecendo as difíceis.",
+        solution: "Crie um Quadro Semanal fixo (Grade Teórica e Prática). Defina horário de início, meio e fim das matérias.",
+        tip: "Mantenha o cronograma visível acima da sua mesa de estudos.",
+        solved: false,
+        icon: "🧭"
+      },
+      {
+        id: "q6",
+        title: "Perda de Durabilidade (Sem Consistência)",
+        category: "foco",
+        categoryLabel: "🎯 Foco & Rotina",
+        severity: "media",
+        severityLabel: "⚡ MÉDIA (Zombie)",
+        description: "Estudar 10 horas em um único dia do final de semana e passar os próximos 5 dias sem abrir o caderno.",
+        impact: "Curva do Esquecimento acentuada: esquecer quase tudo até o próximo ciclo.",
+        solution: "Regra da Micro-Consistência: É infinitamente melhor estudar 1 hora todos os dias do que 7 horas em um só dia.",
+        tip: "Defina a 'Meta Mínima Diária' de apenas 20 minutos. Se fizer isso, a meta do dia já foi atingida!",
+        solved: false,
+        icon: "⚔️"
+      },
+      {
+        id: "q7",
+        title: "Loot Ruim (Anotações Ineficientes)",
+        category: "metodo",
+        categoryLabel: "📚 Método de Estudo",
+        severity: "baixa",
+        severityLabel: "🌱 BAIXA (Slime)",
+        description: "Apenas copiar palavra por palavra da lousa ou do slide sem sintetizar ou compreender o tema.",
+        impact: "Estudo passivo que dá a ilusão de aprendizado mas gera esquecimento rápido.",
+        solution: "Método Cornell / Resumos Ativos: Escreva o tema com suas próprias palavras e crie perguntas de autoexplicação no final.",
+        tip: "Tente explicar a matéria em voz alta como se estivesse ensinando para um garpão ou para Steve!",
+        solved: false,
+        icon: "💎"
+      },
+      {
+        id: "q8",
+        title: "Sem Abrigo na Noite (Espaço Ruim)",
+        category: "ambiente",
+        categoryLabel: "🏡 Ambiente",
+        severity: "baixa",
+        severityLabel: "🌱 BAIXA (Slime)",
+        description: "Estudar na cama, com barulho alto de TV, iluminação ruim ou mesa bagunçada cheia de pratos e objetos sem uso.",
+        impact: "Associação do cérebro da área de estudo com relaxamento/sono e falta de concentração constante.",
+        solution: "Prepare seu 'Crafting Space': Deixe a mesa limpa apenas com os materiais do momento. Estude em cadeira firme.",
+        tip: "Use fones de ouvido com som de chuva ou ruído marrom/lo-fi se houver barulho ao redor.",
+        solved: false,
+        icon: "🏠"
+      }
+    ];
+
+    // --- ESTADO DA APLICAÇÃO ---
+    let currentFilter = "all";
+    let activeQuestId = null;
+    let playerXp = 0;
+    let playerLevel = 1;
+
+    // --- ELEMENTOS DO DOM ---
+    const cardsGrid = document.getElementById("cards-grid");
+    const filterButtons = document.querySelectorAll(".filter-btn");
+    const statActive = document.getElementById("stat-active");
+    const statSolved = document.getElementById("stat-solved");
+    const xpBarFill = document.getElementById("xp-bar-fill");
+    const xpText = document.getElementById("xp-text");
+    const levelDisplay = document.getElementById("level-display");
+
+    // Modal do Baú
+    const chestModal = document.getElementById("chest-modal");
+    const closeModalBtn = document.getElementById("close-modal");
+    const modalTitle = document.getElementById("modal-title");
+    const modalCategory = document.getElementById("modal-category");
+    const modalSeverity = document.getElementById("modal-severity");
+    const modalDescription = document.getElementById("modal-description");
+    const modalImpact = document.getElementById("modal-impact");
+    const modalSolution = document.getElementById("modal-solution");
+    const modalTip = document.getElementById("modal-tip");
+    const btnToggleStatus = document.getElementById("btn-toggle-status");
+
+    // Modal de Adicionar Quest
+    const addModal = document.getElementById("add-modal");
+    const btnAddQuest = document.getElementById("btn-add-quest");
+    const closeAddModalBtn = document.getElementById("close-add-modal");
+    const addQuestForm = document.getElementById("add-quest-form");
+
+    // --- RENDERIZAÇÃO DE CARDS ---
+    function renderCards() {
+      cardsGrid.innerHTML = "";
+
+      const filteredQuests = studyQuests.filter(q => {
+        if (currentFilter === "all") return true;
+        if (currentFilter === "solved") return q.solved;
+        if (currentFilter === "alta") return q.severity === "alta";
+        if (currentFilter === "foco") return q.category === "foco";
+        if (currentFilter === "saude") return q.category === "saude";
+        return true;
+      });
+
+      if (filteredQuests.length === 0) {
+        cardsGrid.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; color: #fff; padding: 40px; background: rgba(0,0,0,0.4); border: 4px solid #3c3c3c;">
+            <p style="font-family: 'Press Start 2P', monospace; font-size: 14px; color: #fce100;">NENHUM INCÔMODO ENCONTRADO NESTE FILTRO!</p>
+            <p style="margin-top: 10px; font-size: 18px; color: #aaa;">Seu inventário de problemas está limpo aqui.</p>
+          </div>
+        `;
+        return;
+      }
+
+      filteredQuests.forEach(quest => {
+        const card = document.createElement("div");
+        card.className = `mc-card ${quest.solved ? 'solved' : ''}`;
+        
+        card.innerHTML = `
+          <div class="card-header">
+            <span class="card-icon">${quest.icon}</span>
+            <span class="mc-badge badge-${quest.severity}">${quest.severityLabel}</span>
+          </div>
+          <h3 class="card-title">${quest.title}</h3>
+          <p class="card-desc">${quest.description}</p>
+          <div class="card-footer">
+            <span class="card-category-tag">${quest.categoryLabel}</span>
+            <button class="mc-button btn-gold open-chest-btn">ABRIR BAÚ 📦</button>
+          </div>
+        `;
+
+        // Evento de clique para abrir o modal
+        card.addEventListener("click", () => {
+          AudioEngine.playChestOpen();
+          openChestModal(quest.id);
+        });
+
+        cardsGrid.appendChild(card);
+      });
+
+      updateStats();
+    }
+
+    // --- ATUALIZAÇÃO DE ESTATÍSTICAS E BARRA DE XP ---
+    function updateStats() {
+      const totalActive = studyQuests.filter(q => !q.solved).length;
+      const totalSolved = studyQuests.filter(q => q.solved).length;
+
+      statActive.textContent = totalActive;
+      statSolved.textContent = totalSolved;
+
+      // Cálculo de Nível e XP
+      playerXp = totalSolved * 250;
+      playerLevel = Math.floor(playerXp / 1000) + 1;
+      const xpCurrentLevel = playerXp % 1000;
+      const xpPercentage = (xpCurrentLevel / 1000) * 100;
+
+      levelDisplay.textContent = playerLevel;
+      xpText.textContent = `${xpCurrentLevel} / 1000 XP`;
+      xpBarFill.style.width = `${xpPercentage}%`;
+    }
+
+    // --- ABRIR MODAL BAÚ DO MINECRAFT ---
+    function openChestModal(id) {
+      activeQuestId = id;
+      const quest = studyQuests.find(q => q.id === id);
+
+      if (!quest) return;
+
+      modalTitle.textContent = quest.title;
+      modalCategory.textContent = quest.categoryLabel.toUpperCase();
+      modalSeverity.textContent = quest.severityLabel;
+      modalDescription.textContent = quest.description;
+      modalImpact.textContent = quest.impact;
+      modalSolution.textContent = quest.solution;
+      modalTip.textContent = quest.tip;
+
+      if (quest.solved) {
+        btnToggleStatus.textContent = "🔁 MARCAR COMO NÃO RESOLVIDO";
+        btnToggleStatus.className = "mc-button btn-red";
+      } else {
+        btnToggleStatus.textContent = "EQUIPAR SOLUÇÃO / RESOLVER QUEST (+250 XP)";
+        btnToggleStatus.className = "mc-button btn-gold";
+      }
+
+      chestModal.classList.remove("hidden");
+    }
+
+    // --- FECHAR MODAL BAÚ ---
+    function closeChestModal() {
+      AudioEngine.playClick();
+      chestModal.classList.add("hidden");
+      activeQuestId = null;
+    }
+
+    // --- ATANAR STATUS DA QUEST (RESOLVIDO / NÃO RESOLVIDO) ---
+    btnToggleStatus.addEventListener("click", () => {
+      if (!activeQuestId) return;
+
+      const quest = studyQuests.find(q => q.id === activeQuestId);
+      if (quest) {
+        quest.solved = !quest.solved;
+
+        if (quest.solved) {
+          AudioEngine.playXpSound();
+        } else {
+          AudioEngine.playClick();
+        }
+
+        renderCards();
+        closeChestModal();
+      }
+    });
+
+    // --- LÓGICA DE FILTROS ---
+    filterButtons.forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        AudioEngine.playClick();
+        filterButtons.forEach(b => b.classList.remove("active"));
+        e.target.classList.add("active");
+        currentFilter = e.target.getAttribute("data-filter");
+        renderCards();
+      });
+    });
+
+    // --- MODAL DE CRIAR NOVA QUEST ---
+    btnAddQuest.addEventListener("click", () => {
+      AudioEngine.playClick();
+      addModal.classList.remove("hidden");
+    });
+
+    closeAddModalBtn.addEventListener("click", () => {
+      AudioEngine.playClick();
+      addModal.classList.add("hidden");
+    });
+
+    addQuestForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      const title = document.getElementById("input-title").value;
+      const category = document.getElementById("input-category").value;
+      const severity = document.getElementById("input-severity").value;
+      const desc = document.getElementById("input-desc").value;
+      const solution = document.getElementById("input-solution").value;
+      const tip = document.getElementById("input-tip").value;
+
+      const categoryLabels = {
+        foco: "🎯 Foco & Rotina",
+        saude: "🧪 Saúde Mental",
+        metodo: "📚 Método de Estudo",
+        ambiente: "🏡 Ambiente"
+      };
+
+      const severityLabels = {
+        alta: "⚠️ ALTA (Creeper)",
+        media: "⚡ MÉDIA (Zombie)",
+        baixa: "🌱 BAIXA (Slime)"
+      };
+
+      const icons = {
+        foco: "🎯",
+        saude: "🧪",
+        metodo: "📖",
+        ambiente: "🏡"
+      };
+
+      const newQuest = {
+        id: "q_" + Date.now(),
+        title: title,
+        category: category,
+        categoryLabel: categoryLabels[category],
+        severity: severity,
+        severityLabel: severityLabels[severity],
+        description: desc,
+        impact: "Prejudica seu desempenho diário nos estudos.",
+        solution: solution,
+        tip: tip,
+        solved: false,
+        icon: icons[category] || "📜"
+      };
+
+      studyQuests.unshift(newQuest);
+      AudioEngine.playXpSound();
+      addModal.classList.add("hidden");
+      addQuestForm.reset();
+      renderCards();
+    });
+
+    closeModalBtn.addEventListener("click", closeChestModal);
+
+    // Fechar modais ao clicar no fundo escuro (backdrop)
+    window.addEventListener("click", (e) => {
+      if (e.target === chestModal) closeChestModal();
+      if (e.target === addModal) {
+        AudioEngine.playClick();
+        addModal.classList.add("hidden");
+      }
+    });
+
+    // Inicialização do Protótipo
+    renderCards();
+  </script>
+</body>
+</html>
